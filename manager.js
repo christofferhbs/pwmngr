@@ -1,5 +1,7 @@
 function create(masterPassword) {}
 
+function openVault(masterPassword) {}
+
 function add(masterPassword, name, username, password) {}
 
 function get(masterPassword, name) {}
