@@ -1,26 +1,29 @@
-function add(masterPassword, entryName, username, password) {
-    
-}
+function create(masterPassword) {}
 
-function get(masterPassword, entryName) {
+function add(masterPassword, name, username, password) {}
 
-}
-
+function get(masterPassword, name) {}
 
 const command = process.argv[2];
 
-if (command === "add") {
-    const masterPassword = process.argv[3];
-    const entryName = process.argv[4];
-    const username = process.argv[5];
-    const password = process.argv[6];
+if (command === "create") {
+  const masterPassword = process.argv[3];
 
-    add(masterPassword, entryName, username, password);
+  create(masterPassword);
+}
+
+if (command === "add") {
+  const masterPassword = process.argv[3];
+  const name = process.argv[4];
+  const username = process.argv[5];
+  const password = process.argv[6];
+
+  add(masterPassword, name, username, password);
 }
 
 if (command === "get") {
-    const masterPassword = process.argv[3];
-    const entryName = process.argv[4];
+  const masterPassword = process.argv[3];
+  const name = process.argv[4];
 
-    get(masterPassword, entryName);
+  get(masterPassword, name);
 }
