@@ -2,6 +2,8 @@ function create(masterPassword) {}
 
 function openVault(masterPassword) {}
 
+function saveVault(entries, key, salt) {}
+
 function add(masterPassword, name, username, password) {}
 
 function get(masterPassword, name) {}
