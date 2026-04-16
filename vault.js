@@ -20,10 +20,10 @@ export default class Vault {
 
     // string -> bytes - crypto funktionerne forventer bytes
     return {
-      salt: Buffer.from(obj.salt, "hex"),
-      iv: Buffer.from(obj.iv, "hex"),
-      authTag: Buffer.from(obj.authTag, "hex"),
-      ciphertext: Buffer.from(obj.ciphertext, "hex"),
+      salt: Buffer.from(obj.salt, "base64"),
+      iv: Buffer.from(obj.iv, "base64"),
+      authTag: Buffer.from(obj.authTag, "base64"),
+      ciphertext: Buffer.from(obj.ciphertext, "base64"),
     };
   }
 
@@ -31,10 +31,10 @@ export default class Vault {
     // opret et objekt til at holde data midlertidigt for at tilpasse det (cool)
     // bytes -> string - JSON forventer string
     const obj = {
-      salt: salt.toString("hex"),
-      iv: iv.toString("hex"),
-      authTag: authTag.toString("hex"),
-      ciphertext: ciphertext.toString("hex"),
+      salt: salt.toString("base64"),
+      iv: iv.toString("base64"),
+      authTag: authTag.toString("base64"),
+      ciphertext: ciphertext.toString("base64"),
     };
     fs.writeFileSync(this.filePath, JSON.stringify(obj, null, 2));
   }
