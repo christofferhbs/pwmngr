@@ -23,7 +23,7 @@ export default class Vault {
       salt: Buffer.from(obj.salt, "hex"),
       iv: Buffer.from(obj.iv, "hex"),
       authTag: Buffer.from(obj.authTag, "hex"),
-      cipherText: Buffer.from(obj.cipherText, "hex"),
+      ciphertext: Buffer.from(obj.ciphertext, "hex"),
     };
   }
 
@@ -34,7 +34,7 @@ export default class Vault {
       salt: salt.toString("hex"),
       iv: iv.toString("hex"),
       authTag: authTag.toString("hex"),
-      cipherText: ciphertext.toString("hex"),
+      ciphertext: ciphertext.toString("hex"),
     };
     fs.writeFileSync(this.filePath, JSON.stringify(obj, null, 2));
   }
