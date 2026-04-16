@@ -60,6 +60,11 @@ function get(masterPassword, name) {
   return entries.find((e) => e.name === name) ?? null;
 }
 
+function search(masterPassword, query) {
+  const { entries } = openVault(masterPassword);
+  return entries.filter((e) => e.name.includes(query));
+}
+
 const [, , command, ...args] = process.argv;
 
 try {
@@ -92,8 +97,27 @@ try {
       break;
     }
 
+    case "search": {
+      const [masterPassword, query] = args;
+      const entries = search(masterPassword, query);
+
+      if (entries.length === 0) {
+        console.log(`Fandt ingen entries indeholdende "${query}"`);
+        break;
+      }
+
+      console.log(`Fandt ${entries.length} entries indeholdende "${query}":`);
+      console.log();
+
+      for (const entry of entries) {
+        console.log(`name: ${entry.name}`);
+        console.log();
+      }
+      break;
+    }
+
     default:
-      throw new Error("Ukendt kommando. Brug: create | add | get");
+      throw new Error("Ukendt kommando. Brug: create | add | get | search");
   }
 } catch (err) {
   console.log(err.message);
