@@ -5,11 +5,20 @@ export function generateSalt() {
 }
 
 export function createKey(masterPassword, salt) {
-  return crypto.pbkdf2Sync(masterPassword, salt, 100000, 32, "sha256"); // AES-256 kræver en key på 32 bytes (256 bits = 32 bytes)
+  const ITERATIONS = 100000; // OWASP anbefaler 600000
+  const KEY_LENGTH = 32; // AES-256 kræver en key på 32 bytes (256 bits = 32 bytes)
+
+  return crypto.pbkdf2Sync(
+    masterPassword,
+    salt,
+    ITERATIONS,
+    KEY_LENGTH,
+    "sha256",
+  );
 }
 
 export function encrypt(plaintext, key) {
-  const iv = crypto.randomBytes(12); // skal være 12 bytes iv til aes-gcm (counter mode: hardcoded til 12 bytes iv + 4 bytes counter)
+  const iv = crypto.randomBytes(12); // aes-gcm krav (counter mode: hardcoded til 12 bytes iv + 4 bytes counter)
   const cipher = crypto.createCipheriv("aes-256-gcm", key, iv); //createCipheriv: Opretter og returnerer et cipher objekt
 
   const ciphertext = Buffer.concat([
@@ -17,7 +26,7 @@ export function encrypt(plaintext, key) {
     cipher.final(),
   ]); // final: lukker for cipher objekt
 
-  const authTag = cipher.getAuthTag();
+  const authTag = cipher.getAuthTag(); // Auth Tag: skal bruges til at verificere at data ikke er ændret
 
   return {
     ciphertext,
