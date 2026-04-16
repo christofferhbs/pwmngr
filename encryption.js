@@ -18,6 +18,7 @@ export function createKey(masterPassword, salt) {
 }
 
 export function encrypt(plaintext, key) {
+  // SKAL generere ny iv hver gang
   const iv = crypto.randomBytes(12); // aes-gcm krav (counter mode: hardcoded til 12 bytes iv + 4 bytes counter)
   const cipher = crypto.createCipheriv("aes-256-gcm", key, iv); //createCipheriv: Opretter og returnerer et cipher objekt
 
