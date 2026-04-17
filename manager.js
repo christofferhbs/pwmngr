@@ -1,4 +1,4 @@
-import { generateSalt, createKey, encrypt, decrypt } from "./encryption.js";
+import { generateSalt, deriveKey, encrypt, decrypt } from "./encryption.js";
 import Vault from "./vault.js";
 
 const vault = new Vault();
@@ -10,8 +10,8 @@ function create(masterPassword) {
   }
 
   const salt = generateSalt(); // unikt salt per udførsel
-  const key = createKey(masterPassword, salt); // opret ny key
-  const { ciphertext, iv, authTag } = encrypt("[]", key); // krypter tomt array for at få props (og fordi array forventes i openVault funktionen)
+  const key = deriveKey(masterPassword, salt); // udled key
+  const { ciphertext, iv, authTag } = encrypt("[]", key); // krypter tomt array for at få props (og fordi array forventes i openVault())
   vault.save({ salt, iv, authTag, ciphertext });
 }
 
@@ -21,9 +21,8 @@ function openVault(masterPassword) {
   }
 
   const vaultContent = vault.load();
-  // udled key fra master pw og vaultens gemte salt
-  // det gemte salt skal være samme salt som ved create, ellers oprettes en anden nøgle
-  const key = createKey(masterPassword, vaultContent.salt); // ikke ny key, men udledning af key
+  // det gemte salt skal være samme salt som ved create(), ellers udledes en anden nøgle
+  const key = deriveKey(masterPassword, vaultContent.salt); // udled key fra master pw og vaultens gemte salt
 
   let plaintext;
   try {
@@ -45,7 +44,8 @@ function openVault(masterPassword) {
 }
 
 function saveVault(entries, key, salt) {
-  const { ciphertext, iv, authTag } = encrypt(JSON.stringify(entries), key);
+  const plaintext = JSON.stringify(entries);
+  const { ciphertext, iv, authTag } = encrypt(plaintext, key);
   vault.save({ salt, iv, authTag, ciphertext });
 }
 

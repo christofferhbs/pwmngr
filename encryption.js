@@ -4,17 +4,19 @@ export function generateSalt() {
   return crypto.randomBytes(16); // stor nok til at være unik (og konventionen)
 }
 
-export function createKey(masterPassword, salt) {
+export function deriveKey(masterPassword, salt) {
   const ITERATIONS = 100000; // OWASP anbefaler 600000
   const KEY_LENGTH = 32; // AES-256 kræver en key på 32 bytes (256 bits = 32 bytes)
 
-  return crypto.pbkdf2Sync(
+  const key = crypto.pbkdf2Sync(
     masterPassword,
     salt,
     ITERATIONS,
     KEY_LENGTH,
     "sha256",
   );
+
+  return key;
 }
 
 export function encrypt(plaintext, key) {
