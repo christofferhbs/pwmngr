@@ -15,6 +15,7 @@ function create(masterPassword) {
   vault.save({ salt, iv, authTag, ciphertext });
 }
 
+// udled key og dekrypter
 function openVault(masterPassword) {
   if (!vault.exists()) {
     throw new Error("Ingen vault fundet: brug 'create' kommandoen først");
@@ -40,9 +41,11 @@ function openVault(masterPassword) {
     );
   }
 
+  // key og salt returneres mhp at give mulighed for at kryptere entries uden at skulle udlede key, og læse salt igen
   return { entries, key, salt: vaultContent.salt };
 }
 
+// krypter entries
 function saveVault(entries, key, salt) {
   const plaintext = JSON.stringify(entries);
   const { ciphertext, iv, authTag } = encrypt(plaintext, key);
