@@ -1,5 +1,5 @@
 import * as encryption from "./encryption.js";
-import Vault from "./vault.js";
+import { Vault } from "./vault.js";
 
 const vault = new Vault();
 

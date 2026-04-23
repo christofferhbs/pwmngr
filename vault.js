@@ -18,7 +18,7 @@ const __dirname = path.dirname(__filename);
 /**
  * Læser og gemmer vault-filen på disk.
  */
-export default class Vault {
+export class Vault {
   /**
    * Opretter en vault med en bestemt filsti.
    *
