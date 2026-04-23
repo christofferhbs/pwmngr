@@ -16,7 +16,7 @@ const vault = new Vault();
  * Resultatet af at åbne vaulten.
  *
  * @typedef {object} OpenVaultResult
- * @property {VaultEntry[]} entries Dekrypterede entries.
+ * @property {VaultEntry[]} vaultEntries Dekrypterede entries.
  * @property {Buffer} key Den udledte nøgle.
  * @property {Buffer} salt Salt læst fra vault-filen.
  */
@@ -41,10 +41,10 @@ function create(masterPassword) {
 }
 
 /**
- * Åbner vaulten og returnerer entries sammen med de data, der skal bruges for at gemme igen.
+ * Åbner vaulten og returnerer vault entries sammen med de data, der skal bruges for at gemme igen.
  *
  * @param {string} masterPassword Master password til vaulten.
- * @returns {OpenVaultResult} Dekrypterede entries og data til senere gemning.
+ * @returns {OpenVaultResult} Dekrypterede vault entries og data til senere gemning.
  * @throws {Error} Hvis vaulten ikke er oprettet, master password er forkert eller data er ugyldige.
  */
 function openVault(masterPassword) {
@@ -53,7 +53,8 @@ function openVault(masterPassword) {
   }
 
   const vaultContent = vault.load();
-  // det gemte salt skal være samme salt som ved create(), ellers udledes en anden nøgle
+  // det gemte salt skal være samme salt som ved create()
+  // ellers udledes en anden nøgle end den oprindelige
   const key = encryption.deriveKey(masterPassword, vaultContent.salt); // udled key fra master pw og vaultens gemte salt
 
   let plaintext;
@@ -73,11 +74,11 @@ function openVault(masterPassword) {
   }
 
   // key og salt returneres mhp at give mulighed for at kryptere entries uden at skulle udlede key, og læse salt igen
-  return { entries: vaultEntries, key, salt: vaultContent.salt };
+  return { vaultEntries, key, salt: vaultContent.salt };
 }
 
 /**
- * Gemmer entries ved at lave dem om til JSON og kryptere dem.
+ * Gemmer vault entries ved at lave dem om til JSON og kryptere dem.
  *
  * @param {VaultEntry[]} vaultEntries Entries som skal gemmes.
  * @param {Buffer} key Den udledte nøgle.
@@ -100,9 +101,9 @@ function saveVault(vaultEntries, key, salt) {
  * @returns {void}
  */
 function add(masterPassword, entryName, username, password) {
-  const { entries, key, salt } = openVault(masterPassword);
-  entries.push({ entryName: entryName, username, password });
-  saveVault(entries, key, salt);
+  const { vaultEntries, key, salt } = openVault(masterPassword);
+  vaultEntries.push({ entryName: entryName, username, password });
+  saveVault(vaultEntries, key, salt);
 }
 
 /**
@@ -113,20 +114,20 @@ function add(masterPassword, entryName, username, password) {
  * @returns {VaultEntry | null} Det fundne entry eller `null`.
  */
 function get(masterPassword, entryName) {
-  const { entries } = openVault(masterPassword);
-  return entries.find((e) => e.entryName === entryName) ?? null;
+  const { vaultEntries } = openVault(masterPassword);
+  return vaultEntries.find((e) => e.entryName === entryName) ?? null;
 }
 
 /**
- * Finder alle entries hvor navnet indeholder søgeteksten.
+ * Finder alle vault entries hvor navnet indeholder søgeteksten.
  *
  * @param {string} masterPassword Master password til vaulten.
  * @param {string} query Tekst der søges efter i `entryName`.
  * @returns {VaultEntry[]} Alle entries der matcher søgningen.
  */
 function search(masterPassword, query) {
-  const { entries } = openVault(masterPassword);
-  return entries.filter((e) => e.entryName.includes(query));
+  const { vaultEntries } = openVault(masterPassword);
+  return vaultEntries.filter((e) => e.entryName.includes(query));
 }
 
 const [, , command, ...args] = process.argv;
@@ -163,19 +164,19 @@ try {
 
     case "search": {
       const [masterPassword, query] = args;
-      const entries = search(masterPassword, query);
+      const vaultEntries = search(masterPassword, query);
 
-      if (entries.length === 0) {
+      if (vaultEntries.length === 0) {
         console.log(`Fandt ingen vault entries indeholdende "${query}"`);
         break;
       }
 
       console.log(
-        `Fandt ${entries.length} vault entries indeholdende "${query}":`,
+        `Fandt ${vaultEntries.length} vault entries indeholdende "${query}":`,
       );
       console.log();
 
-      for (const entry of entries) {
+      for (const entry of vaultEntries) {
         console.log(`entryName: ${entry.entryName}`);
         console.log(`username: ${entry.username}`);
         console.log(`password: ${entry.password}`);
