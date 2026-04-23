@@ -3,6 +3,31 @@ import Vault from "./vault.js";
 
 const vault = new Vault();
 
+/**
+ * Et enkelt login gemt i vaulten.
+ *
+ * @typedef {object} VaultEntry
+ * @property {string} entryName Navn brugt til opslag.
+ * @property {string} username Brugernavn til tjenesten.
+ * @property {string} password Password til tjenesten.
+ */
+
+/**
+ * Resultatet af at åbne vaulten.
+ *
+ * @typedef {object} OpenVaultResult
+ * @property {VaultEntry[]} entries Dekrypterede entries.
+ * @property {Buffer} key Den udledte nøgle.
+ * @property {Buffer} salt Salt læst fra vault-filen.
+ */
+
+/**
+ * Opretter en ny tom vault.
+ *
+ * @param {string} masterPassword Master password til vaulten.
+ * @returns {void}
+ * @throws {Error} Hvis der allerede findes en vault.
+ */
 function create(masterPassword) {
   // beslutning: understøt kun een vault, men med mulighed for udvidelse til flere senere
   if (vault.exists()) {
@@ -15,7 +40,13 @@ function create(masterPassword) {
   vault.save({ salt, iv, authTag, ciphertext });
 }
 
-// udled key og dekrypter
+/**
+ * Åbner vaulten og returnerer entries sammen med de data, der skal bruges for at gemme igen.
+ *
+ * @param {string} masterPassword Master password til vaulten.
+ * @returns {OpenVaultResult} Dekrypterede entries og data til senere gemning.
+ * @throws {Error} Hvis vaulten ikke er oprettet, master password er forkert eller data er ugyldige.
+ */
 function openVault(masterPassword) {
   if (!vault.exists()) {
     throw new Error("Ingen vault fundet: brug 'create' kommandoen først");
@@ -45,24 +76,54 @@ function openVault(masterPassword) {
   return { entries: vaultEntries, key, salt: vaultContent.salt };
 }
 
-// krypter entries
+/**
+ * Gemmer entries ved at lave dem om til JSON og kryptere dem.
+ *
+ * @param {VaultEntry[]} vaultEntries Entries som skal gemmes.
+ * @param {Buffer} key Den udledte nøgle.
+ * @param {Buffer} salt Salt der hører til vaulten.
+ * @returns {void}
+ */
 function saveVault(vaultEntries, key, salt) {
   const plaintext = JSON.stringify(vaultEntries);
   const { ciphertext, iv, authTag } = encrypt(plaintext, key);
   vault.save({ salt, iv, authTag, ciphertext });
 }
 
+/**
+ * Tilføjer et nyt entry til vaulten.
+ *
+ * @param {string} masterPassword Master password til vaulten.
+ * @param {string} entryName Navn på det entry der skal gemmes.
+ * @param {string} username Brugernavn der skal gemmes.
+ * @param {string} password Password der skal gemmes.
+ * @returns {void}
+ */
 function add(masterPassword, entryName, username, password) {
   const { entries, key, salt } = openVault(masterPassword);
   entries.push({ entryName: entryName, username, password });
   saveVault(entries, key, salt);
 }
 
+/**
+ * Finder et entry ud fra dets navn.
+ *
+ * @param {string} masterPassword Master password til vaulten.
+ * @param {string} entryName Navn på det entry der søges efter.
+ * @returns {VaultEntry | null} Det fundne entry eller `null`.
+ */
 function get(masterPassword, entryName) {
   const { entries } = openVault(masterPassword);
   return entries.find((e) => e.entryName === entryName) ?? null;
 }
 
+/**
+ * Finder alle entries hvor navnet indeholder søgeteksten.
+ *
+ * @param {string} masterPassword Master password til vaulten.
+ * @param {string} query Tekst der søges efter i `entryName`.
+ * @returns {VaultEntry[]} Alle entries der matcher søgningen.
+ */
 function search(masterPassword, query) {
   const { entries } = openVault(masterPassword);
   return entries.filter((e) => e.entryName.includes(query));
