@@ -32,9 +32,9 @@ function openVault(masterPassword) {
     throw new Error("Forkert master password");
   }
 
-  let entries;
+  let vaultEntries;
   try {
-    entries = JSON.parse(plaintext);
+    vaultEntries = JSON.parse(plaintext);
   } catch {
     throw new Error(
       "Vault er korrupteret: dekrypteret data er ikke gyldig JSON",
@@ -42,30 +42,30 @@ function openVault(masterPassword) {
   }
 
   // key og salt returneres mhp at give mulighed for at kryptere entries uden at skulle udlede key, og læse salt igen
-  return { entries, key, salt: vaultContent.salt };
+  return { entries: vaultEntries, key, salt: vaultContent.salt };
 }
 
 // krypter entries
-function saveVault(entries, key, salt) {
-  const plaintext = JSON.stringify(entries);
+function saveVault(vaultEntries, key, salt) {
+  const plaintext = JSON.stringify(vaultEntries);
   const { ciphertext, iv, authTag } = encrypt(plaintext, key);
   vault.save({ salt, iv, authTag, ciphertext });
 }
 
-function add(masterPassword, name, username, password) {
+function add(masterPassword, entryName, username, password) {
   const { entries, key, salt } = openVault(masterPassword);
-  entries.push({ name, username, password });
+  entries.push({ entryName: entryName, username, password });
   saveVault(entries, key, salt);
 }
 
-function get(masterPassword, name) {
+function get(masterPassword, entryName) {
   const { entries } = openVault(masterPassword);
-  return entries.find((e) => e.name === name) ?? null;
+  return entries.find((e) => e.entryName === entryName) ?? null;
 }
 
 function search(masterPassword, query) {
   const { entries } = openVault(masterPassword);
-  return entries.filter((e) => e.name.includes(query));
+  return entries.filter((e) => e.entryName.includes(query));
 }
 
 const [, , command, ...args] = process.argv;
@@ -80,18 +80,18 @@ try {
     }
 
     case "add": {
-      const [masterPassword, name, username, password] = args;
-      add(masterPassword, name, username, password);
-      console.log(`Tilføjede entry "${name}"`);
+      const [masterPassword, entryName, username, password] = args;
+      add(masterPassword, entryName, username, password);
+      console.log(`Tilføjede entry "${entryName}"`);
       break;
     }
 
     case "get": {
-      const [masterPassword, name] = args;
-      const entry = get(masterPassword, name);
+      const [masterPassword, entryName] = args;
+      const entry = get(masterPassword, entryName);
 
       if (!entry) {
-        console.log(`Fandt intet entry med navnet "${name}"`);
+        console.log(`Fandt intet vault entry med navnet "${entryName}"`);
         break;
       }
 
@@ -105,15 +105,19 @@ try {
       const entries = search(masterPassword, query);
 
       if (entries.length === 0) {
-        console.log(`Fandt ingen entries indeholdende "${query}"`);
+        console.log(`Fandt ingen vault entries indeholdende "${query}"`);
         break;
       }
 
-      console.log(`Fandt ${entries.length} entries indeholdende "${query}":`);
+      console.log(
+        `Fandt ${entries.length} vault entries indeholdende "${query}":`,
+      );
       console.log();
 
       for (const entry of entries) {
-        console.log(`name: ${entry.name}`);
+        console.log(`entryName: ${entry.entryName}`);
+        console.log(`username: ${entry.username}`);
+        console.log(`password: ${entry.password}`);
         console.log();
       }
       break;
