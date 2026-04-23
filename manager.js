@@ -1,4 +1,4 @@
-import { generateSalt, deriveKey, encrypt, decrypt } from "./encryption.js";
+import * as encryption from "./encryption.js";
 import Vault from "./vault.js";
 
 const vault = new Vault();
@@ -34,9 +34,9 @@ function create(masterPassword) {
     throw new Error("En vault eksisterer allerede");
   }
 
-  const salt = generateSalt(); // unikt salt per udførsel
-  const key = deriveKey(masterPassword, salt); // udled key
-  const { ciphertext, iv, authTag } = encrypt("[]", key); // krypter tomt array for at få props (og fordi array forventes i openVault())
+  const salt = encryption.generateSalt(); // unikt salt per udførsel
+  const key = encryption.deriveKey(masterPassword, salt); // udled key
+  const { ciphertext, iv, authTag } = encryption.encrypt("[]", key); // krypter tomt array for at få props (og fordi array forventes i openVault())
   vault.save({ salt, iv, authTag, ciphertext });
 }
 
@@ -54,11 +54,11 @@ function openVault(masterPassword) {
 
   const vaultContent = vault.load();
   // det gemte salt skal være samme salt som ved create(), ellers udledes en anden nøgle
-  const key = deriveKey(masterPassword, vaultContent.salt); // udled key fra master pw og vaultens gemte salt
+  const key = encryption.deriveKey(masterPassword, vaultContent.salt); // udled key fra master pw og vaultens gemte salt
 
   let plaintext;
   try {
-    plaintext = decrypt(vaultContent, key);
+    plaintext = encryption.decrypt(vaultContent, key);
   } catch {
     throw new Error("Forkert master password");
   }
@@ -86,7 +86,7 @@ function openVault(masterPassword) {
  */
 function saveVault(vaultEntries, key, salt) {
   const plaintext = JSON.stringify(vaultEntries);
-  const { ciphertext, iv, authTag } = encrypt(plaintext, key);
+  const { ciphertext, iv, authTag } = encryption.encrypt(plaintext, key);
   vault.save({ salt, iv, authTag, ciphertext });
 }
 
